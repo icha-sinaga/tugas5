@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Game dengan Javascript dan HTML5</title>
+	<style>
+		*{padding:0; margin:0;}
+		canvas {
+			border: 1px solid black;  display: block; margin: 0 auto; background-image: url('background.png');
+		}
+	</style>
+	</head>
+		<body>
+			<canvas id="myCanvas" width="600" height="420"><img src="background.png"></canvas>
+			<script>
+				//variabel bernama canvas mengambil elemen berdasarkan canvas id myCanvas
+				var canvas = document.getElementById('myCanvas');
+				//variabel bernama context berfungsi sebagai penyimpanan objek atau konteks
+				var context = canvas.getContext('2d');
+				//variabel bernama speed sebagai pengatur kecepatan 
+				var speed= 10;
+				gameSpeed = 100;
+
+				//variabel bernama pesawat sebagai objek untuk menambahkan gambar sebagai bird
+				var pesawat = new Image();
+				pesawat.src =("pesawat.png");
+
+				//
+				var bird = { 
+					x : canvas.width / 2,
+					y : canvas.height / 2,
+					vx : 0,
+					vy : 1};
+					var pip = []; //variabel pipa
+					var gravity = 0.2; //variabel gravitasi
+					var bounce = 4; //variabel lompatan objek
+					var distance = 200; //variabel jarak
+					var dir = 'left'; //variabel dir berfungsi untuk mengembalikan nilai
+					document.onkeydown = function (e){
+						if(!e){
+							e = window.e;
+						} //perintah onkeydown untuk membuat aksi ketika user melakukan inputan, dimana akan diakses lokasi dari pesawat pada halaman
+
+
+						var code = e.keyCode;
+						if(e.charCode && codee == 0){
+							code = e.charCode;
+						} //membuat variabel bernama code untuk mengambil nilai dari key yang ditekan
+						switch(code){
+							case 37: //apabila key yang ditekan ialah kiri
+							if(dir!='right')
+								dir='left';
+							break;
+							case 38: //apabila key yang ditekan ialah atas
+							if(dir!='down')
+								dir ='up';
+							break;
+							case 39: //apabila key yang ditekan ialah kanan
+							if(dir!='left')
+								dir='right';
+							break;
+							case 40: //apabila key yang ditekan ialah bawah
+							if(dir!='up')
+								dir ='down';
+							break;
+						}
+					}
+
+					var b = 0.8;
+					function makeBird(){ //fungsi membuat gambar pesawat
+						context.beginPath();
+						context.drawImage(pesawat, bird.x, bird.y, 120, 120); //pembuatan gambar pesawat beserta posisi dan ukuran
+						context.closePath();
+						//pengaturan posisi pesawat saat bermain, dimana posisi akan berubah secara otomatis sesuai dengan lompatan pesawat
+						bird.y += bird.vy;
+						bird.vy += gravity;
+						if(dir=='up'){
+							bird.vy = -bounce;
+							dir = '';
+						}
+						if(bird.y + 10 >= canvas.height){
+							dir = 'up';
+						}
+					}
+					//variabel bernama tower sebagai objek untuk menambahkan gambar sebagai pipa
+					var tower = new Image();
+					tower.src =("tower3.png");
+					function makePip(){
+						for (p of pip){
+							context.beginPath();
+							context.drawImage(tower, p.top.x, p.top.y, p.top.width, p.top.height); //pembuatan gambar tower  yang berada pada posisi atas
+							context.closePath();
+							//pengaturan jarak antar tower
+							p.bottom.y = p.top.height +distance;
+							p.bottom.height = (canvas.height - p.bottom.y);
+							context.beginPath();
+							//pembuatan gambar tower  yang berada pada posisi bawah
+							context.drawImage(tower, p.bottom.x, p.bottom.y, p.bottom.width,p.bottom.height);
+							context.closePath();
+							p.bottom.x -= 1;
+							p.top.x -=1;
+							if(p.top.x < -10){
+								pip.shift(); //menghapus elemen pip dari awal dan mengembalikannya kembali
+							}
+							if(isCollideB(bird, p.bottom) || isCollideT(bird, p.top) || bird.y +10>= canvas.height){
+								alert ('Your Score: '+score);
+								window.location.reload(); //jika posisi pesawat mengenai tower yang berada di posisi ata atau bawah atau pesawat berada pada posisi lebih besar dari tinggi canvas maka akan muncul alert skor
+							}
+							if(score % 10 == 0){
+								console.log(distance);
+								score += 1;
+								distance -= 5;
+							} //perhitungan skor
+						}
+					}
+					function isCollideB(b,p){ //fungsi isCollideB untuk mengatur ukuran panjang dari tower posisi bawah
+						return(
+							(b.x +10 > p.x) &&
+							(b.x < p.x+10) &&
+							(b.y > p.y || b.y +10 >p.y) );
+					}
+					function isCollideT(b,p){
+						//fungsi isCollideB untuk mengatur ukuran panjang dari tower posisi atas
+						return(
+							(b.x +10 > p.x) &&
+							(b.x < p.x+10) && 
+							(b.y < p.y + p.height)
+							);
+					}
+					function rnd(min, max){ //fungsi rnd untuk menghitung kecepatan dari tower
+						var r = Math.round(Math.random() * (max - min)+ min);
+						return (r-r% speed);
+					}
+					var score =0;
+					var frame =0;
+					(function loop() {
+						//membuat antrian fungsi dan melakukan pengulangan
+						requestAnimationFrame(function(){
+						context.clearRect (0, 0, canvas.width, canvas.height); //menghapus konteks yang ada pada canvas yang berada pada kordinat 0,0
+						if(frame % gameSpeed == 0) {
+							pip.push({ //pemasukan tower pada bagian kanan canvas saat game berlangsung
+								top:{
+									x : canvas.width,
+									y : 0,
+									height : rnd(70,140),
+									width : 10,
+								},
+								bottom : {
+									x : canvas.width, y : 0,
+									height : rnd(100,160), 
+									width : 10,
+								}
+							});
+							score++;
+						}
+						makeBird();
+						makePip();
+						frame++;
+						loop();
+					})
+				}) ();
+			</script>
+		</body>
+</html>
